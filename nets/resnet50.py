@@ -72,6 +72,7 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
 
         return out
+    
 
 
 class ResNet(nn.Module):
@@ -83,12 +84,14 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
 
         # 600,600,3 -> 300,300,64
-        self.conv1 = nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=2, bias=False)
+        # self.conv1 = nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=2, bias=False)
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
 
         # 300,300,64 -> 150,150,64
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=0, ceil_mode=True)
+        # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=0, ceil_mode=True)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         # 150,150,64 -> 150,150,256
         self.layer1 = self._make_layer(block, 64, layers[0])
@@ -100,7 +103,7 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
 
         self.avgpool = nn.AvgPool2d(2)
-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+        self.fc = nn.Linear(512 * block.expansion* 7 * 7, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -156,6 +159,22 @@ class ResNet(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.fc(x)
         return x
+    
+    def _load_pretrained_weights(self, model_path):
+        # 加载预训练模型权重
+        checkpoint = torch.load(model_path)
+        
+        # 过滤掉 `fc` 层的权重
+        filtered_checkpoint = {k: v for k, v in checkpoint.items() if "fc" not in k}
+
+        # 加载预训练权重（strict=False 忽略不匹配的 `fc` 层）
+        self.load_state_dict(filtered_checkpoint, strict=False)
+
+        # 对修改过的第一层卷积层进行手动初始化
+        # 初始化卷积层为 Xavier 初始化
+        torch.nn.init.xavier_uniform_(self.conv1.weight)
+        if self.conv1.bias is not None:
+            torch.nn.init.zeros_(self.conv1.bias)    
 
 
 def resnet50():
