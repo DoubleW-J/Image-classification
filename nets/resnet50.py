@@ -159,22 +159,6 @@ class ResNet(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.fc(x)
         return x
-    
-    def _load_pretrained_weights(self, model_path):
-        # 加载预训练模型权重
-        checkpoint = torch.load(model_path)
-        
-        # 过滤掉 `fc` 层的权重
-        filtered_checkpoint = {k: v for k, v in checkpoint.items() if "fc" not in k}
-
-        # 加载预训练权重（strict=False 忽略不匹配的 `fc` 层）
-        self.load_state_dict(filtered_checkpoint, strict=False)
-
-        # 对修改过的第一层卷积层进行手动初始化
-        # 初始化卷积层为 Xavier 初始化
-        torch.nn.init.xavier_uniform_(self.conv1.weight)
-        if self.conv1.bias is not None:
-            torch.nn.init.zeros_(self.conv1.bias)    
 
 
 def resnet50():
