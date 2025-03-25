@@ -246,7 +246,7 @@ if __name__ == '__main__':
             best_test_accuracy = log_test['test_accuracy']
             new_best_checkpoint_path =  config.BEST_MODEL_PATH.format(log_test['test_accuracy'])
             torch.save(model, new_best_checkpoint_path)
-            print(f'保存新的最佳模型 {config.BEST_MODEL_PATH.format(best_test_accuracy)}')
+            print(f'Save the new best model {config.BEST_MODEL_PATH.format(best_test_accuracy)}')
             # best_test_accuracy = log_test['test_accuracy']
 
     df_train_log.to_csv('training_log_train_data.csv', index=False)
