@@ -1,11 +1,10 @@
-# ResNet50：残差网络在Pytorch中的实现
-
-# 性能情况
-| 训练数据集 | 权值文件名称 | 测试数据集 | 精度 |
+# Helmet Classification
+| データ | 重みファイル名 |  | 精度 |
 | :---: | :---: | :---: | :---: |
-| MNIST-train | resnet50_mnist.pth | MNIST-test | 99.64% |
+|  |                |      | 99.64% |
 
 # 所需环境
+
 torch==1.7.1
 # 文件下载
 ## a.模型文件下载

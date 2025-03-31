@@ -7,6 +7,7 @@ import cv2
 import os
 from nets.resnet50 import Bottleneck, ResNet
 from tqdm import tqdm
+import config 
 
 # 訓練データの前処理：ランダムクロップとリサイズ、水平反転、テンソル変換、正規化
 train_transform = transforms.Compose([
@@ -27,7 +28,7 @@ test_transform = transforms.Compose([
 
 
 # データセットのパス設定
-dataset_dir = r'D:\Download\dataset\helmet_split\helmet_classification'
+dataset_dir = config.dataset_dir
 train_path = os.path.join(dataset_dir, 'train')
 test_path = os.path.join(dataset_dir, 'val')
 
@@ -75,6 +76,7 @@ def fit_one_epoch(net, softmaxloss, epoch, epoch_size, epoch_size_val, gen, gen_
                                 'lr': get_lr(optimizer)})
             pbar.update(1)
 
+
     # 検証フェーズ
     net.eval()
     print('\nテスト開始')
@@ -91,7 +93,9 @@ def fit_one_epoch(net, softmaxloss, epoch, epoch_size, epoch_size_val, gen, gen_
     
     # 現在のモデルの検証精度を計算
     current_accuracy = float(100 * test_correct / len(test_dataset))
-    print(f"Epoch {epoch + 1} 検証精度: {current_accuracy}%")
+    print(f"Epoch {epoch + 1} Validation Accuracy: {current_accuracy}%")
+
+
 
     # 現在のモデルの検証精度がより良ければ、モデルを保存
     if current_accuracy > best_accuracy:
@@ -111,34 +115,37 @@ def fit_one_epoch(net, softmaxloss, epoch, epoch_size, epoch_size_val, gen, gen_
     return best_accuracy
 
 if __name__ == '__main__':
+
+
     # ----------------------------#
     #   Cudaを使用するか
     #   GPUがない場合はFalseに設定
     # ----------------------------#
-    cuda = True
+    cuda = config.cuda
     # ----------------------------#
     #   事前学習モデルを使用するか
     # ----------------------------#
-    pre_train = True
+    pre_train = config.pre_train
     # ----------------------------#
     #   コサイン退火学習率を使用するか
     # ----------------------------#
-    CosineLR = True
+    CosineLR = config.CosineLR
 
     # ----------------------------#
     #   ハイパーパラメータ設定
     #   lr：学習率
     #   Batch_size：バッチサイズ
     # ----------------------------#
-    lr = 1e-3
-    Batch_size = 32
-    Init_Epoch = 0
-    Fin_Epoch = 100
+    lr = config.lr
+    Batch_size = config.Batch_size
+    Init_Epoch = config.Init_Epoch
+    Fin_Epoch = config.Fin_Epoch
 
     # モデル作成
-    model = ResNet(Bottleneck, [3, 4, 6, 3], num_classes=2)
+    model = ResNet(Bottleneck, [3, 4, 6, 3], num_classes=config.num_classes, pretrained=pre_train)
+    
     if pre_train:
-        model_path = r'logs\resnet50_imagenet.pth'
+        model_path = config.pretrained_model_path
         pretrained_dict = torch.load(model_path, weights_only=True)
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if 'conv1' not in k and 'fc' not in k}
         model_dict = model.state_dict()
@@ -171,3 +178,4 @@ if __name__ == '__main__':
                                       epoch_size_val=epoch_size_val, gen=gen, gen_test=gen_test, Epoch=Fin_Epoch,
                                       cuda=cuda, best_accuracy=best_accuracy)
         lr_scheduler.step()
+  

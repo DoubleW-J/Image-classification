@@ -4,12 +4,13 @@ import os
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
+import config
 
-Batch_size = 128
-
+Batch_size = config.Batch_size
+test_path = config.test_path
 root = '.\logs'
 file_dir = os.listdir(root)
-model = ResNet(Bottleneck, [3, 4, 6, 3], num_classes=10)
+model = ResNet(Bottleneck, [3, 4, 6, 3], num_classes=config.num_classes)
 
 for file in file_dir:
     PATH = os.path.join(root, file)
@@ -20,8 +21,16 @@ for file in file_dir:
     model = model.cuda()
     model.eval()
 
-    test_dataset = datasets.MNIST(root='data/', train=False,
-                                      transform=transforms.ToTensor(), download=False)
+    # データの前処理：必要に応じて調整してください
+    test_transform = transforms.Compose([
+        transforms.Resize(256),  # 必要に応じて調整できます
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])  # データセットに合わせて平均と標準偏差を調整してください
+    ])
+
+    # カスタムテストセットの読み込み（ImageFolderを使用）
+    test_dataset = datasets.ImageFolder(test_dataset, transform=test_transform)
 
 
     gen_test = DataLoader(dataset=test_dataset, batch_size=Batch_size, shuffle=True)
